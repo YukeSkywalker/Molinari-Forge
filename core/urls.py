@@ -17,4 +17,5 @@ urlpatterns = [
     path("rewards/", include("apps.rewards.urls")),
     path("notifications/", include("apps.notifications_app.urls")),
     path("profile/", include("apps.users.urls")),
+   
 ]

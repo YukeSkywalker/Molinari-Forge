@@ -18,7 +18,7 @@
     <p class="mb-0" style="color:var(--text-muted);">Manage students, points, houses, and platform settings.</p>
   </div>
   <div class="d-flex gap-2">
-    <a href="{% url 'export_leaderboard' %}" class="btn-forge btn-secondary btn-sm">
+    <a href="{#}" class="btn-forge btn-secondary btn-sm">
       <i class="bi bi-download"></i> Export Data
     </a>
     <a href="/admin/" class="btn-forge btn-ghost btn-sm" target="_blank">
@@ -172,7 +172,7 @@
         <button class="btn-forge btn-secondary justify-content-start" data-bs-toggle="modal" data-bs-target="#createRewardModal">
           <i class="bi bi-gift-fill" style="color:#10b981;"></i> Create Reward
         </button>
-        <a href="{% url 'manage_rewards' %}" class="btn-forge btn-secondary justify-content-start">
+        <a href="{#}" class="btn-forge btn-secondary justify-content-start">
           <i class="bi bi-shop" style="color:var(--accent-teal);"></i> Manage Rewards
         </a>
         <button class="btn-forge btn-secondary justify-content-start" data-bs-toggle="modal" data-bs-target="#resetLbModal">
@@ -248,7 +248,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form method="post" action="{% url 'award_points' %}">
+        <form method="post" action="{#}">
           {% csrf_token %}
           <div class="mb-4">
             <label class="form-label-forge">Student</label>
@@ -295,7 +295,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-forge btn-ghost" data-bs-dismiss="modal">Cancel</button>
-        <form method="post" action="{% url 'reset_weekly_lb' %}">
+        <form method="post" action="{#}">
           {% csrf_token %}
           <button type="submit" class="btn-forge btn-danger"><i class="bi bi-arrow-clockwise"></i> Confirm Reset</button>
         </form>
