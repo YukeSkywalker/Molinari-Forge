@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">Notifications</span>
+{% endblock %}
+
+
+<div class="notif-center-header animate-fadeup">
+  <div>
+    <h1 class="mb-1">Notifications</h1>
+    <p class="mb-0" style="color:var(--text-muted);">
+      {% if unread_count %}{{ unread_count }} unread notification{{ unread_count|pluralize }}{% else %}All caught up!{% endif %}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if unread_count %}
+    <form method="post" action="{% url 'notifications_mark_all_read' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-forge btn-secondary btn-sm">
+        <i class="bi bi-check2-all"></i> Mark All Read
+      </button>
+    </form>
+    {% endif %}
+    <a href="{% url 'notification_settings' %}" class="btn-forge btn-ghost btn-sm">
+      <i class="bi bi-gear-fill"></i> Settings
+    </a>
+  </div>
+</div>
+
+<!-- FILTER PILLS -->
+<div class="notif-filter-pills mb-6 animate-fadeup delay-1">
+  <button class="notif-pill active" data-filter="all" onclick="filterNotif('all',this)">All</button>
+  <button class="notif-pill" data-filter="xp" onclick="filterNotif('xp',this)">⚡ XP</button>
+  <button class="notif-pill" data-filter="badge" onclick="filterNotif('badge',this)">🏅 Badges</button>
+  <button class="notif-pill" data-filter="house" onclick="filterNotif('house',this)">🛡 House</button>
+  <button class="notif-pill" data-filter="request" onclick="filterNotif('request',this)">📬 Requests</button>
+  <button class="notif-pill" data-filter="reward" onclick="filterNotif('reward',this)">🎁 Rewards</button>
+  <button class="notif-pill" data-filter="system" onclick="filterNotif('system',this)">⚙ System</button>
+</div>
+
+<!-- NOTIFICATIONS LIST -->
+<div class="card-glass animate-fadeup delay-2" style="padding:0;overflow:hidden;">
+
+  {% regroup notifications by date_group as notif_groups %}
+
+
+  <!-- Date group header -->
+  <div style="padding:var(--space-3) var(--space-6);background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);">
+    <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">
+      {{ group.grouper }}
+    </span>
+  </div>
+
+  {% for notif in group.list %}
+  <div class="notif-item {% if not notif.is_read %}unread{% endif %} notif-filterable"
+    data-type="{{ notif.notification_type }}"
+    style="padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--border-subtle);">
+
+    <div class="notif-icon"
+      style="background:{% if notif.notification_type == 'xp' %}rgba(79,142,247,.12)
+             {% elif notif.notification_type == 'badge' %}rgba(245,200,66,.12)
+             {% elif notif.notification_type == 'house' %}rgba(139,92,246,.12)
+             {% elif notif.notification_type == 'request' %}rgba(16,185,129,.12)
+             {% elif notif.notification_type == 'reward' %}rgba(245,200,66,.12)
+             {% else %}rgba(255,255,255,.06){% endif %};">
+      {% if notif.notification_type == 'xp' %}⚡
+      {% elif notif.notification_type == 'badge' %}🏅
+      {% elif notif.notification_type == 'house' %}🛡
+      {% elif notif.notification_type == 'request' %}📬
+      {% elif notif.notification_type == 'reward' %}🎁
+      {% else %}⚙{% endif %}
+    </div>
+
+    <div class="notif-body">
+      <div class="notif-text">{{ notif.message|safe }}</div>
+      <div style="display:flex;align-items:center;gap:var(--space-3);margin-top:4px;">
+        <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+        {% if not notif.is_read %}
+          <span class="badge-forge badge-blue" style="font-size:.6rem;">New</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:var(--space-2);flex-shrink:0;">
+      {% if notif.action_url %}
+      <a href="{{ notif.action_url }}" class="btn-forge btn-ghost btn-sm" style="font-size:.78rem;">
+        View <i class="bi bi-arrow-right"></i>
+      </a>
+      {% endif %}
+      {% if not notif.is_read %}
+      <form method="post" action="{% url 'notification_mark_read' notif.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-forge btn-icon btn-ghost btn-sm" title="Mark as read">
+          <i class="bi bi-check"></i>
+        </button>
+      </form>
+      {% endif %}
+      <form method="post" action="{% url 'notification_delete' notif.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-forge btn-icon btn-ghost btn-sm" title="Delete" style="color:var(--text-muted);">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+ 
+  <!-- No notifications at all -->
+  {% for notif in notifications %}
+  <div class="notif-item {% if not notif.is_read %}unread{% endif %} notif-filterable"
+    data-type="{{ notif.notification_type }}"
+    style="padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--border-subtle);">
+    <div class="notif-icon" style="background:rgba(79,142,247,.12);">
+      {% if notif.notification_type == 'xp' %}⚡{% elif notif.notification_type == 'badge' %}🏅{% elif notif.notification_type == 'house' %}🛡{% elif notif.notification_type == 'request' %}📬{% elif notif.notification_type == 'reward' %}🎁{% else %}⚙{% endif %}
+    </div>
+    <div class="notif-body">
+      <div class="notif-text">{{ notif.message|safe }}</div>
+      <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state" style="padding:var(--space-16);">
+    <div class="empty-icon">🔔</div>
+    <h4 style="color:var(--text-secondary);margin-bottom:var(--space-2);">All clear!</h4>
+    <p>You're up to date — no notifications here.</p>
+  </div>
+  {% endfor %}
+
+</div>
+
+<script>
+function filterNotif(type, btn) {
+  document.querySelectorAll('.notif-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.notif-filterable').forEach(item => {
+    item.style.display = (type === 'all' || item.dataset.type === type) ? 'flex' : 'none';
+  });
+}
+</script>

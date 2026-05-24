@@ -1,0 +1,188 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Houses{% endblock %}
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">Houses</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="d-flex align-items-start justify-content-between mb-4 animate-fadeup">
+  <div>
+    <h1 class="mb-1">The Four Houses</h1>
+    <p class="mb-0" style="color:var(--text-muted);">Compete, collaborate, and bring glory to your house.</p>
+  </div>
+  {% if user.profile.house %}
+  <div>
+    <span style="font-size:.8125rem;color:var(--text-muted);display:block;text-align:right;margin-bottom:4px;">Your house</span>
+    <span class="badge-forge badge-{{ user.profile.house.name|lower }} px-3 py-2" style="font-size:.875rem;">
+      {% if user.profile.house.name == 'Ignis' %}🔥{% elif user.profile.house.name == 'Aqua' %}💧{% elif user.profile.house.name == 'Terra' %}🌿{% else %}🌪{% endif %}
+      {{ user.profile.house.name }}
+    </span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- CURRENT SEASON BANNER -->
+<div style="background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:var(--space-5) var(--space-6);margin-bottom:var(--space-8);display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;" class="animate-fadeup delay-1">
+  <span style="font-size:1.5rem;">🗓</span>
+  <div style="flex:1;">
+    <div style="font-family:var(--font-display);font-weight:700;color:var(--text-primary);">Season {{ current_season|default:"Autumn" }} · Week {{ current_week|default:3 }}</div>
+    <div style="font-size:.8125rem;color:var(--text-muted);">Season ends in {{ days_remaining|default:18 }} days — every point counts!</div>
+  </div>
+  <a href="{% url 'leaderboard' %}" class="btn-forge btn-secondary btn-sm">
+    <i class="bi bi-trophy-fill"></i> Full Rankings
+  </a>
+</div>
+
+<!-- HOUSES GRID -->
+<div class="row g-4 mb-6">
+
+  {% for house in houses %}
+  {% with name_lower=house.name|lower %}
+  <div class="col-12 col-md-6 animate-fadeup delay-{{ forloop.counter }}">
+    <div class="house-card house-{{ name_lower }} {% if user.profile.house == house %}ring-active{% endif %}">
+      <!-- Glow -->
+      <div class="house-bg-glow" style="background:radial-gradient(circle,
+        {% if name_lower == 'ignis' %}var(--house-ignis)
+        {% elif name_lower == 'aqua' %}var(--house-aqua)
+        {% elif name_lower == 'terra' %}var(--house-terra)
+        {% else %}var(--house-ventus){% endif %} 0%,transparent 70%);"></div>
+
+      <!-- Header row -->
+      <div class="d-flex align-items-start justify-content-between mb-4">
+        <div class="house-emblem">
+          {% if name_lower == 'ignis' %}🔥{% elif name_lower == 'aqua' %}💧{% elif name_lower == 'terra' %}🌿{% else %}🌪{% endif %}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);">
+          {% if user.profile.house == house %}
+            <span class="badge-forge badge-blue">Your House</span>
+          {% endif %}
+          <span class="badge-forge badge-{{ name_lower }}">#{{ house.rank|default:forloop.counter }} Overall</span>
+        </div>
+      </div>
+
+      <div class="house-name">{{ house.name }}</div>
+      <div class="house-motto">"{{ house.motto|default:"Forged in the fires of determination." }}"</div>
+
+      <!-- Stats -->
+      <div class="house-stats-grid">
+        <div>
+          <span class="hs-val">{{ house.total_points|default:0 }}</span>
+          <span class="hs-label">Points</span>
+        </div>
+        <div>
+          <span class="hs-val">{{ house.member_count|default:0 }}</span>
+          <span class="hs-label">Members</span>
+        </div>
+        <div>
+          <span class="hs-val">{{ house.wins|default:0 }}</span>
+          <span class="hs-label">Wins</span>
+        </div>
+      </div>
+
+      <!-- Members avatars -->
+      <div class="house-members-row mb-4">
+        {% for member in house.top_members %}
+          {% if member.profile.avatar %}
+            <img src="{{ member.profile.avatar.url }}" alt="{{ member.username }}" class="avatar avatar-sm" />
+          {% else %}
+            <div class="avatar-placeholder avatar-sm">{{ member.username|first|upper }}</div>
+          {% endif %}
+        {% endfor %}
+        {% if house.member_count > 5 %}
+          <div class="members-more">+{{ house.member_count|add:"-5" }}</div>
+        {% endif %}
+      </div>
+
+      <!-- XP bar -->
+      <div class="xp-meta mb-2">
+        <span class="xp-meta-label" style="font-size:.72rem;">Season Progress</span>
+        <span class="xp-meta-value" style="font-size:.72rem;">{{ house.total_points|default:0 }} / {{ season_max_points|default:5000 }}</span>
+      </div>
+      <div class="xp-bar-wrap mb-5">
+        <div class="xp-bar-fill" data-percent="{{ house.percent|default:0 }}"
+          style="background:{% if name_lower == 'ignis' %}var(--house-ignis){% elif name_lower == 'aqua' %}var(--house-aqua){% elif name_lower == 'terra' %}var(--house-terra){% else %}var(--house-ventus){% endif %};"></div>
+      </div>
+
+      <a href="{% url 'house_detail' house.slug %}" class="btn-forge btn-secondary w-100 justify-content-center">
+        View House <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+  {% endwith %}
+
+  {% empty %}
+  <!-- Static fallback if no context -->
+  <div class="col-12 col-md-6 animate-fadeup">
+    <div class="house-card house-{{ h }}">
+      <div class="house-bg-glow"></div>
+      <div class="house-emblem">{% if h == 'ignis' %}🔥{% elif h == 'aqua' %}💧{% elif h == 'terra' %}🌿{% else %}🌪{% endif %}</div>
+      <div class="house-name">{{ h|capfirst }}</div>
+      <div class="house-motto">"Every great achievement starts here."</div>
+      <div class="house-stats-grid">
+        <div><span class="hs-val">0</span><span class="hs-label">Points</span></div>
+        <div><span class="hs-val">0</span><span class="hs-label">Members</span></div>
+        <div><span class="hs-val">0</span><span class="hs-label">Wins</span></div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<!-- HOUSE COMPARISON TABLE -->
+<div class="card-glass animate-fadeup">
+  <div class="section-header">
+    <span class="section-title"><span class="dot" style="background:var(--accent-gold);"></span>Season Comparison</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="table-forge w-100">
+      <thead>
+        <tr>
+          <th>House</th>
+          <th>Total Points</th>
+          <th>Weekly Points</th>
+          <th>Members</th>
+          <th>Avg Points/Member</th>
+          <th>Badges</th>
+          <th>Rank</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for house in houses %}
+        <tr {% if user.profile.house == house %}style="background:rgba(79,142,247,.04);"{% endif %}>
+          <td>
+            <div style="display:flex;align-items:center;gap:var(--space-3);">
+              <div class="house-emblem-sm" style="width:30px;height:30px;background:{% if house.name|lower == 'ignis' %}var(--house-ignis-bg){% elif house.name|lower == 'aqua' %}var(--house-aqua-bg){% elif house.name|lower == 'terra' %}var(--house-terra-bg){% else %}var(--house-ventus-bg){% endif %};">
+                {% if house.name|lower == 'ignis' %}🔥{% elif house.name|lower == 'aqua' %}💧{% elif house.name|lower == 'terra' %}🌿{% else %}🌪{% endif %}
+              </div>
+              <span style="font-weight:700;color:var(--text-primary);">{{ house.name }}</span>
+              {% if user.profile.house == house %}<span class="badge-forge badge-blue">You</span>{% endif %}
+            </div>
+          </td>
+          <td><span style="font-family:var(--font-mono);font-weight:700;color:var(--text-primary);">{{ house.total_points|default:0 }}</span></td>
+          <td><span style="font-family:var(--font-mono);color:var(--accent-blue);">{{ house.weekly_points|default:0 }}</span></td>
+          <td>{{ house.member_count|default:0 }}</td>
+          <td><span style="font-family:var(--font-mono);">{{ house.avg_points|default:0 }}</span></td>
+          <td>{{ house.badges_count|default:0 }}</td>
+          <td>
+            <span style="font-family:var(--font-mono);font-weight:700;
+              {% if house.rank == 1 %}color:var(--accent-gold);
+              {% elif house.rank == 2 %}color:#b0b8c8;
+              {% elif house.rank == 3 %}color:#cd7f32;
+              {% else %}color:var(--text-muted);{% endif %}">#{{ house.rank|default:"—" }}</span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center" style="color:var(--text-muted);padding:var(--space-8);">No house data available</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

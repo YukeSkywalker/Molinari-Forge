@@ -1,0 +1,287 @@
+{% extends 'base/base_onboarding.html' %}
+{% load static %}
+
+{% block title %}Choose Your House{% endblock %}
+
+{% block body %}
+<div class="onboarding-wrap">
+
+  <!-- Brand header -->
+  <div style="position:fixed;top:0;left:0;right:0;height:var(--navbar-height);display:flex;align-items:center;padding:0 var(--space-8);border-bottom:1px solid var(--border-subtle);background:rgba(10,11,15,.8);backdrop-filter:blur(12px);z-index:100;">
+    <div style="display:flex;align-items:center;gap:var(--space-3);">
+      <div class="auth-brand-logo" style="width:32px;height:32px;font-size:.9rem;">⚒</div>
+      <span style="font-family:var(--font-display);font-weight:800;font-size:1rem;color:var(--text-primary);">Molinari Forge</span>
+    </div>
+    <span style="margin-left:auto;font-size:.78rem;color:var(--text-muted);">Step <span id="stepDisplay">1</span> of {{ total_steps|default:4 }}</span>
+  </div>
+
+  <div class="onboarding-card" style="margin-top:calc(var(--navbar-height) + var(--space-8));">
+
+    <!-- Progress dots -->
+    <div class="step-indicator" id="stepDots">
+      {% for i in steps %}
+      <div class="step-dot {% if forloop.first %}current{% endif %}" data-step="{{ forloop.counter }}"></div>
+      {% empty %}
+      <div class="step-dot current"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'onboarding' %}" id="onboardingForm">
+      {% csrf_token %}
+      <input type="hidden" name="current_step" id="currentStepInput" value="1" />
+
+      <!-- ── STEP 1 ── -->
+      <div data-step="1" class="ob-step">
+        <div class="ob-question">How do you usually approach a problem? 🧠</div>
+        <div data-question="q1">
+          {% for opt in step1_options %}
+          <label class="ob-option" data-question="q1">
+            <input type="radio" name="q1" value="{{ opt.value }}" style="display:none;" required />
+            <span class="ob-opt-icon">{{ opt.icon }}</span>
+            <span class="ob-opt-text">{{ opt.text }}</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          {% empty %}
+          <label class="ob-option" data-question="q1">
+            <input type="radio" name="q1" value="a" style="display:none;" />
+            <span class="ob-opt-icon">⚡</span>
+            <span class="ob-opt-text">Act fast — intuition and speed are my strengths</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q1">
+            <input type="radio" name="q1" value="b" style="display:none;" />
+            <span class="ob-opt-icon">🔬</span>
+            <span class="ob-opt-text">Analyse carefully — I think before I act</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q1">
+            <input type="radio" name="q1" value="c" style="display:none;" />
+            <span class="ob-opt-icon">🤝</span>
+            <span class="ob-opt-text">Collaborate — I'm strongest in a team</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q1">
+            <input type="radio" name="q1" value="d" style="display:none;" />
+            <span class="ob-opt-icon">🌿</span>
+            <span class="ob-opt-text">Adapt — I flow with whatever the situation needs</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          {% endfor %}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:var(--space-6);">
+          <button type="button" class="btn-forge btn-primary" data-ob-next="1" id="nextBtn1">
+            Next <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2 ── -->
+      <div data-step="2" class="ob-step" style="display:none;">
+        <div class="ob-question">What do you value most in life? 🌟</div>
+        <div data-question="q2">
+          <label class="ob-option" data-question="q2">
+            <input type="radio" name="q2" value="a" style="display:none;" />
+            <span class="ob-opt-icon">🔥</span>
+            <span class="ob-opt-text">Passion and intensity — I give everything or nothing</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q2">
+            <input type="radio" name="q2" value="b" style="display:none;" />
+            <span class="ob-opt-icon">💡</span>
+            <span class="ob-opt-text">Knowledge and wisdom — learning is life</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q2">
+            <input type="radio" name="q2" value="c" style="display:none;" />
+            <span class="ob-opt-icon">🌱</span>
+            <span class="ob-opt-text">Growth and stability — progress over perfection</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q2">
+            <input type="radio" name="q2" value="d" style="display:none;" />
+            <span class="ob-opt-icon">🌪</span>
+            <span class="ob-opt-text">Freedom and change — I thrive in movement</span>
+            <span class="ob-opt-check"></span>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:var(--space-6);">
+          <button type="button" class="btn-forge btn-ghost" data-ob-prev="2">
+            <i class="bi bi-arrow-left"></i> Back
+          </button>
+          <button type="button" class="btn-forge btn-primary" data-ob-next="2">
+            Next <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3 ── -->
+      <div data-step="3" class="ob-step" style="display:none;">
+        <div class="ob-question">Pick your ideal weekend activity 🎯</div>
+        <div data-question="q3">
+          <label class="ob-option" data-question="q3">
+            <input type="radio" name="q3" value="a" style="display:none;" />
+            <span class="ob-opt-icon">🏋️</span>
+            <span class="ob-opt-text">An intense workout or competition</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q3">
+            <input type="radio" name="q3" value="b" style="display:none;" />
+            <span class="ob-opt-icon">📚</span>
+            <span class="ob-opt-text">Reading, coding, or exploring new ideas</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q3">
+            <input type="radio" name="q3" value="c" style="display:none;" />
+            <span class="ob-opt-icon">🌲</span>
+            <span class="ob-opt-text">Hiking, gardening, or being in nature</span>
+            <span class="ob-opt-check"></span>
+          </label>
+          <label class="ob-option" data-question="q3">
+            <input type="radio" name="q3" value="d" style="display:none;" />
+            <span class="ob-opt-icon">✈️</span>
+            <span class="ob-opt-text">Travelling somewhere completely new</span>
+            <span class="ob-opt-check"></span>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:var(--space-6);">
+          <button type="button" class="btn-forge btn-ghost" data-ob-prev="3">
+            <i class="bi bi-arrow-left"></i> Back
+          </button>
+          <button type="button" class="btn-forge btn-primary" data-ob-next="3">
+            Next <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: RESULT ── -->
+      <div data-step="4" class="ob-step" style="display:none;">
+        <div style="text-align:center; padding: var(--space-4) 0 var(--space-6);">
+          <div style="font-size:4rem; margin-bottom:var(--space-4); animation: float 2s ease-in-out infinite;">🛡</div>
+          <h2 style="font-family:var(--font-display);font-weight:800;font-size:1.75rem;margin-bottom:var(--space-2);">
+            Ready to find your house?
+          </h2>
+          <p style="color:var(--text-muted);max-width:340px;margin:0 auto var(--space-6);">
+            Your answers will determine which of the four houses you belong to. Your destiny awaits.
+          </p>
+
+          <!-- House preview grid -->
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin-bottom:var(--space-8);max-width:360px;margin-left:auto;margin-right:auto;">
+            <div style="background:var(--house-ignis-bg);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-md);padding:var(--space-4);">
+              <div style="font-size:1.75rem;">🔥</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--house-ignis);font-size:.9rem;">Ignis</div>
+              <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">Passion · Courage</div>
+            </div>
+            <div style="background:var(--house-aqua-bg);border:1px solid rgba(59,130,246,.2);border-radius:var(--radius-md);padding:var(--space-4);">
+              <div style="font-size:1.75rem;">💧</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--house-aqua);font-size:.9rem;">Aqua</div>
+              <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">Wisdom · Depth</div>
+            </div>
+            <div style="background:var(--house-terra-bg);border:1px solid rgba(34,197,94,.2);border-radius:var(--radius-md);padding:var(--space-4);">
+              <div style="font-size:1.75rem;">🌿</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--house-terra);font-size:.9rem;">Terra</div>
+              <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">Growth · Stability</div>
+            </div>
+            <div style="background:var(--house-ventus-bg);border:1px solid rgba(167,139,250,.2);border-radius:var(--radius-md);padding:var(--space-4);">
+              <div style="font-size:1.75rem;">🌪</div>
+              <div style="font-family:var(--font-display);font-weight:800;color:var(--house-ventus);font-size:.9rem;">Ventus</div>
+              <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px;">Freedom · Change</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap;">
+            <button type="button" class="btn-forge btn-ghost" data-ob-prev="4">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button type="submit" class="btn-forge btn-primary btn-lg">
+              Reveal My House ✨
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<style>
+@keyframes float {
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let current = 1;
+  const totalSteps = 4;
+
+  function showStep(n) {
+    document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
+    const target = document.querySelector(`.ob-step[data-step="${n}"]`);
+    if (target) target.style.display = 'block';
+    document.getElementById('currentStepInput').value = n;
+    document.getElementById('stepDisplay').textContent = n;
+    updateDots(n);
+    current = n;
+  }
+
+  function updateDots(n) {
+    document.querySelectorAll('.step-dot').forEach((dot, i) => {
+      dot.classList.remove('done', 'current');
+      if (i < n - 1) dot.classList.add('done');
+      else if (i === n - 1) dot.classList.add('current');
+    });
+  }
+
+  // Next buttons
+  document.querySelectorAll('[data-ob-next]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const step = parseInt(this.dataset.obNext);
+      // Validate current step has selection
+      const radios = document.querySelectorAll(`.ob-step[data-step="${step}"] input[type="radio"]`);
+      if (radios.length > 0) {
+        const checked = document.querySelectorAll(`.ob-step[data-step="${step}"] input[type="radio"]:checked`);
+        if (checked.length === 0) {
+          // Flash the options
+          document.querySelectorAll(`.ob-step[data-step="${step}"] .ob-option`).forEach(o => {
+            o.style.borderColor = 'rgba(244,63,94,.5)';
+            setTimeout(() => o.style.borderColor = '', 800);
+          });
+          return;
+        }
+      }
+      showStep(step + 1);
+    });
+  });
+
+  // Prev buttons
+  document.querySelectorAll('[data-ob-prev]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      showStep(parseInt(this.dataset.obPrev) - 1);
+    });
+  });
+
+  // Option select
+  document.querySelectorAll('.ob-option').forEach(opt => {
+    opt.addEventListener('click', function() {
+      const radio = this.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+      const group = this.closest('[data-question]');
+      if (group) {
+        group.querySelectorAll('.ob-option').forEach(o => {
+          o.classList.remove('selected');
+          const c = o.querySelector('.ob-opt-check');
+          if (c) c.textContent = '';
+        });
+        this.classList.add('selected');
+        const check = this.querySelector('.ob-opt-check');
+        if (check) check.textContent = '✓';
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

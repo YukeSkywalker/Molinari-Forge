@@ -1,0 +1,170 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}House {{ house.name }}{% endblock %}
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <a href="{% url 'houses' %}" class="crumb" style="color:var(--text-muted);text-decoration:none;">Houses</a>
+  <span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">{{ house.name }}</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- HOUSE BANNER -->
+<div class="house-banner mb-8 animate-fadeup"
+  style="border:1px solid {% if house.name == 'Ignis' %}rgba(239,68,68,.2){% elif house.name == 'Aqua' %}rgba(59,130,246,.2){% elif house.name == 'Terra' %}rgba(34,197,94,.2){% else %}rgba(167,139,250,.2){% endif %};">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,
+    {% if house.name == 'Ignis' %}rgba(239,68,68,.08){% elif house.name == 'Aqua' %}rgba(59,130,246,.08){% elif house.name == 'Terra' %}rgba(34,197,94,.08){% else %}rgba(167,139,250,.08){% endif %} 0%,transparent 65%);"></div>
+  <div class="banner-content">
+    <div class="d-flex align-items-center gap-5 flex-wrap">
+      <div class="house-emblem" style="width:96px;height:96px;font-size:3rem;border-radius:var(--radius-xl);
+        background:{% if house.name == 'Ignis' %}var(--house-ignis-bg){% elif house.name == 'Aqua' %}var(--house-aqua-bg){% elif house.name == 'Terra' %}var(--house-terra-bg){% else %}var(--house-ventus-bg){% endif %};">
+        {% if house.name == 'Ignis' %}🔥{% elif house.name == 'Aqua' %}💧{% elif house.name == 'Terra' %}🌿{% else %}🌪{% endif %}
+      </div>
+      <div style="flex:1;">
+        <div class="d-flex align-items-center gap-3 mb-2 flex-wrap">
+          <span class="badge-forge badge-{{ house.name|lower }}">#{{ house.rank|default:1 }} Season Rank</span>
+          {% if user.profile.house == house %}
+            <span class="badge-forge badge-blue">Your House</span>
+          {% endif %}
+        </div>
+        <div class="banner-title grad-text-{{ house.name|lower }}"
+          style="background:{% if house.name == 'Ignis' %}linear-gradient(135deg,#ef4444,#f97316){% elif house.name == 'Aqua' %}linear-gradient(135deg,#3b82f6,#2dd4bf){% elif house.name == 'Terra' %}linear-gradient(135deg,#22c55e,#10b981){% else %}linear-gradient(135deg,#a78bfa,#8b5cf6){% endif %};-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          House {{ house.name }}
+        </div>
+        <p style="color:var(--text-muted);font-style:italic;margin-top:var(--space-2);">"{{ house.motto|default:"Forged in the fires of determination." }}"</p>
+      </div>
+      <!-- Quick stats -->
+      <div class="d-flex gap-6">
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--text-primary);">{{ house.total_points|default:0 }}</div>
+          <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Total Pts</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--text-primary);">{{ house.member_count|default:0 }}</div>
+          <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Members</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--text-primary);">{{ house.wins|default:0 }}</div>
+          <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Wins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Season progress -->
+    <div class="mt-6" style="max-width:500px;">
+      <div class="xp-meta mb-2">
+        <span class="xp-meta-label">Season Progress</span>
+        <span class="xp-meta-value">{{ house.total_points|default:0 }} / {{ season_target|default:5000 }} pts</span>
+      </div>
+      <div class="xp-bar-lg">
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-fill" data-percent="{{ house.season_percent|default:0 }}"
+            style="background:{% if house.name == 'Ignis' %}var(--house-ignis){% elif house.name == 'Aqua' %}var(--house-aqua){% elif house.name == 'Terra' %}var(--house-terra){% else %}var(--house-ventus){% endif %};"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT GRID -->
+<div class="row g-4">
+
+  <!-- MEMBERS -->
+  <div class="col-12 col-lg-8 animate-fadeup delay-1">
+    <div class="card-glass">
+      <div class="section-header">
+        <span class="section-title"><span class="dot"></span>Members — {{ house.member_count }}</span>
+        <input type="search" id="memberSearch" placeholder="Search member…"
+          style="background:var(--bg-base);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-body);font-size:.8125rem;padding:6px 12px;width:180px;" />
+      </div>
+
+      <table class="table-forge" id="memberTable">
+        <thead>
+          <tr><th>Rank</th><th>Member</th><th>Level</th><th>Points</th><th>Badges</th><th>Streak</th></tr>
+        </thead>
+        <tbody>
+          {% for member in house_members %}
+          <tr>
+            <td class="rank-cell"><span class="rank-num">{{ forloop.counter }}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:var(--space-3);">
+                {% if member.avatar %}
+                  <img src="{{ member.avatar.url }}" alt="{{ member.user.username }}" class="avatar avatar-sm" />
+                {% else %}
+                  <div class="avatar-placeholder avatar-sm">{{ member.user.username|first|upper }}</div>
+                {% endif %}
+                <div>
+                  <div style="font-weight:600;font-size:.875rem;color:var(--text-primary);">
+                    {{ member.user.get_full_name|default:member.user.username }}
+                    {% if member.user == user %}<span class="badge-forge badge-blue ms-1" style="font-size:.6rem;">You</span>{% endif %}
+                  </div>
+                  <div style="font-size:.72rem;color:var(--text-muted);">@{{ member.user.username }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span style="font-family:var(--font-mono);font-weight:700;color:var(--accent-blue);">{{ member.level|default:1 }}</span></td>
+            <td><span style="font-family:var(--font-mono);font-weight:700;color:var(--accent-gold);">{{ member.total_points|default:0 }}</span></td>
+            <td><span style="font-family:var(--font-mono);">{{ member.badges_count|default:0 }}</span></td>
+            <td>{% if member.streak %}{{ member.streak }}🔥{% else %}—{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" style="text-align:center;padding:var(--space-8);color:var(--text-muted);">No members yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SIDE: STATS + ACTIVITY -->
+  <div class="col-12 col-lg-4">
+    <div class="card-glass mb-4 animate-fadeup delay-2">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-gold);"></span>House Stats</span>
+      </div>
+      {% for stat in house_stats %}
+      <div class="analytics-bar-row">
+        <span class="ab-label" style="width:110px;">{{ stat.label }}</span>
+        <div class="ab-track"><div class="ab-fill" data-pct="{{ stat.pct }}" style="background:{% if house.name == 'Ignis' %}var(--house-ignis){% elif house.name == 'Aqua' %}var(--house-aqua){% elif house.name == 'Terra' %}var(--house-terra){% else %}var(--house-ventus){% endif %};"></div></div>
+        <span class="ab-value">{{ stat.value }}</span>
+      </div>
+      {% empty %}
+      {% for lbl, val in "Avg Points:120,Total Badges:48,Completion:87,Streak Avg:5" | split:"," %}
+      <div class="analytics-bar-row">
+        <span class="ab-label">{{ lbl|default:"—" }}</span>
+        <div class="ab-track"><div class="ab-fill" data-pct="70" style="background:var(--accent-blue);"></div></div>
+        <span class="ab-value">{{ val|default:0 }}</span>
+      </div>
+      {% endfor %}
+      {% endfor %}
+    </div>
+
+    <div class="card-glass animate-fadeup delay-3">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-teal);"></span>Recent Activity</span>
+      </div>
+      {% for event in house_activity %}
+      <div class="activity-item">
+        <div class="activity-icon-wrap ic-{{ event.type }}">{{ event.icon|default:"⚡" }}</div>
+        <div class="activity-body">
+          <div class="activity-text">{{ event.description|safe }}</div>
+          <div class="activity-time">{{ event.timestamp|timesince }} ago</div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state py-3"><div class="empty-icon">📋</div><p>No recent activity</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('memberSearch')?.addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#memberTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

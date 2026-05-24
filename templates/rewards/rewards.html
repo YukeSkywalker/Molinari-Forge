@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Requests{% endblock %}
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">Requests</span>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-start justify-content-between mb-4 animate-fadeup">
+  <div>
+    <h1 class="mb-1">Requests</h1>
+    <p class="mb-0" style="color:var(--text-muted);">
+      {% if user.profile.role == 'teacher' %}Review and manage student requests.
+      {% else %}Send requests to your teacher and track their status.{% endif %}
+    </p>
+  </div>
+  {% if user.profile.role != 'teacher' %}
+  <button class="btn-forge btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+    <i class="bi bi-plus-lg"></i> New Request
+  </button>
+  {% endif %}
+</div>
+
+<!-- TABS -->
+<div class="d-flex gap-3 align-items-center mb-6 animate-fadeup delay-1" style="flex-wrap:wrap;">
+  <div class="requests-tabs">
+    <button class="requests-tab active" data-tab="pending" onclick="filterTab('pending', this)">
+      Pending
+      {% if pending_count %}<span class="tab-count">{{ pending_count }}</span>{% endif %}
+    </button>
+    <button class="requests-tab" data-tab="approved" onclick="filterTab('approved', this)">
+      Approved
+    </button>
+    <button class="requests-tab" data-tab="rejected" onclick="filterTab('rejected', this)">
+      Rejected
+    </button>
+    <button class="requests-tab" data-tab="all" onclick="filterTab('all', this)">
+      All
+    </button>
+  </div>
+
+  <!-- Type filter -->
+  <div class="d-flex gap-2 ms-auto">
+    <select id="typeFilter" onchange="applyTypeFilter()" style="background:var(--bg-elevated);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-secondary);font-family:var(--font-body);font-size:.8125rem;padding:7px 12px;">
+      <option value="">All Types</option>
+      <option value="points">Extra Points</option>
+      <option value="badge">Badge Request</option>
+      <option value="review">Grade Review</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+</div>
+
+<!-- REQUESTS LIST -->
+<div id="requestsList" class="animate-fadeup delay-2">
+  {% for req in requests %}
+  <div class="request-card mb-4"
+    data-status="{{ req.status }}"
+    data-type="{{ req.request_type }}">
+
+    <div class="req-header">
+      <div class="req-meta">
+        {% if req.student.profile.avatar %}
+          <img src="{{ req.student.profile.avatar.url }}" alt="{{ req.student.username }}" class="avatar avatar-md" />
+        {% else %}
+          <div class="avatar-placeholder avatar-md">{{ req.student.username|first|upper }}</div>
+        {% endif %}
+        <div>
+          <div style="font-weight:700;font-size:.875rem;color:var(--text-primary);">
+            {{ req.student.get_full_name|default:req.student.username }}
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-top:2px;">
+            <span class="badge-forge badge-{{ req.student.profile.house.name|lower|default:'muted' }}" style="font-size:.65rem;">
+              {{ req.student.profile.house.name|default:"—" }}
+            </span>
+            <span style="font-size:.72rem;color:var(--text-muted);">{{ req.created_at|timesince }} ago</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:var(--space-2);">
+        <!-- Type badge -->
+        <span class="badge-forge
+          {% if req.request_type == 'points' %}badge-gold
+          {% elif req.request_type == 'badge' %}badge-purple
+          {% elif req.request_type == 'review' %}badge-blue
+          {% else %}badge-muted{% endif %}">
+          {% if req.request_type == 'points' %}⭐{% elif req.request_type == 'badge' %}🏅{% elif req.request_type == 'review' %}📋{% else %}📝{% endif %}
+          {{ req.get_request_type_display|default:req.request_type|capfirst }}
+        </span>
+        <!-- Status badge -->
+        <span class="badge-forge
+          {% if req.status == 'pending' %}badge-gold
+          {% elif req.status == 'approved' %}badge-green
+          {% else %}badge-red{% endif %}">
+          {% if req.status == 'pending' %}⏳{% elif req.status == 'approved' %}✓{% else %}✕{% endif %}
+          {{ req.status|capfirst }}
+        </span>
+      </div>
+    </div>
+
+    <div class="req-title">{{ req.title }}</div>
+    <div class="req-body">{{ req.message }}</div>
+
+    {% if req.teacher_note %}
+    <div style="background:var(--bg-base);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-4);">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Teacher's Note</div>
+      <div style="font-size:.875rem;color:var(--text-secondary);">{{ req.teacher_note }}</div>
+    </div>
+    {% endif %}
+
+    <div class="req-actions">
+      {% if user.profile.role == 'teacher' and req.status == 'pending' %}
+        <!-- Teacher actions -->
+        <form method="post" action="{% url 'approve_request' req.id %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn-forge btn-success btn-sm" data-action="approve">
+            <i class="bi bi-check-lg"></i> Approve
+          </button>
+        </form>
+        <button class="btn-forge btn-danger btn-sm" data-action="reject"
+          data-bs-toggle="modal" data-bs-target="#rejectModal"
+          data-request-id="{{ req.id }}" data-request-title="{{ req.title }}">
+          <i class="bi bi-x-lg"></i> Reject
+        </button>
+        <a href="{% url 'request_detail' req.id %}" class="btn-forge btn-ghost btn-sm">
+          Full Details <i class="bi bi-arrow-right"></i>
+        </a>
+      {% elif user.profile.role != 'teacher' and req.status == 'pending' %}
+        <!-- Student actions -->
+        <a href="{% url 'request_edit' req.id %}" class="btn-forge btn-secondary btn-sm">
+          <i class="bi bi-pencil"></i> Edit
+        </a>
+        <form method="post" action="{% url 'request_delete' req.id %}" style="display:inline;"
+          onsubmit="return confirm('Delete this request?')">
+          {% csrf_token %}
+          <button type="submit" class="btn-forge btn-ghost btn-sm" style="color:var(--text-muted);">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+        </form>
+      {% else %}
+        <a href="{% url 'request_detail' req.id %}" class="btn-forge btn-ghost btn-sm">
+          View Details <i class="bi bi-arrow-right"></i>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state" style="padding:var(--space-16);">
+    <div class="empty-icon">📬</div>
+    <h4 style="color:var(--text-secondary);margin-bottom:var(--space-2);">No requests yet</h4>
+    <p style="margin-bottom:var(--space-6);">
+      {% if user.profile.role == 'teacher' %}Students haven't submitted any requests.
+      {% else %}You haven't submitted any requests. Use the button above to get started.{% endif %}
+    </p>
+    {% if user.profile.role != 'teacher' %}
+    <button class="btn-forge btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">
+      <i class="bi bi-plus-lg"></i> Create First Request
+    </button>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+
+<!-- ── MODAL: NEW REQUEST ── -->
+{% if user.profile.role != 'teacher' %}
+<div class="modal fade modal-forge" id="newRequestModal" tabindex="-1" aria-labelledby="newRequestLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newRequestLabel">New Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{#}">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="form-label-forge">Request Type</label>
+            <div class="d-flex gap-3 flex-wrap">
+              {% for type_val, type_label in request_types %}
+              <label style="cursor:pointer;">
+                <input type="radio" name="request_type" value="{{ type_val }}" style="display:none;"
+                  {% if forloop.first %}checked{% endif %} />
+                <div class="ob-option {% if forloop.first %}selected{% endif %}" style="padding:var(--space-3) var(--space-4);min-width:140px;">
+                  <span class="ob-opt-icon">
+                    {% if type_val == 'points' %}⭐{% elif type_val == 'badge' %}🏅{% elif type_val == 'review' %}📋{% else %}📝{% endif %}
+                  </span>
+                  <span class="ob-opt-text" style="font-size:.875rem;">{{ type_label }}</span>
+                </div>
+              </label>
+              {% empty %}
+              <label style="cursor:pointer;">
+                <input type="radio" name="request_type" value="points" style="display:none;" checked />
+                <div class="ob-option selected" style="padding:var(--space-3) var(--space-4);min-width:140px;">
+                  <span class="ob-opt-icon">⭐</span><span class="ob-opt-text" style="font-size:.875rem;">Extra Points</span>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="request_type" value="badge" style="display:none;" />
+                <div class="ob-option" style="padding:var(--space-3) var(--space-4);min-width:140px;">
+                  <span class="ob-opt-icon">🏅</span><span class="ob-opt-text" style="font-size:.875rem;">Badge Request</span>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="request_type" value="review" style="display:none;" />
+                <div class="ob-option" style="padding:var(--space-3) var(--space-4);min-width:140px;">
+                  <span class="ob-opt-icon">📋</span><span class="ob-opt-text" style="font-size:.875rem;">Grade Review</span>
+                </div>
+              </label>
+              <label style="cursor:pointer;">
+                <input type="radio" name="request_type" value="other" style="display:none;" />
+                <div class="ob-option" style="padding:var(--space-3) var(--space-4);min-width:140px;">
+                  <span class="ob-opt-icon">📝</span><span class="ob-opt-text" style="font-size:.875rem;">Other</span>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label-forge" for="req_title">Title</label>
+            <input type="text" id="req_title" name="title" class="form-control-forge"
+              placeholder="Brief description of your request" required />
+          </div>
+          <div class="mb-4">
+            <label class="form-label-forge" for="req_message">Message</label>
+            <textarea id="req_message" name="message" class="form-control-forge" rows="5"
+              placeholder="Explain your request in detail. Be specific about what you're asking for and why you deserve it."
+              required></textarea>
+          </div>
+          <div class="modal-footer px-0 pb-0">
+            <button type="button" class="btn-forge btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-forge btn-primary">
+              <i class="bi bi-send"></i> Submit Request
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── MODAL: REJECT WITH NOTE ── -->
+{% if user.profile.role == 'teacher' %}
+<div class="modal fade modal-forge" id="rejectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Request</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" id="rejectForm" action="">
+          {% csrf_token %}
+          <p style="font-size:.875rem;color:var(--text-muted);margin-bottom:var(--space-4);">
+            Rejecting: <strong id="rejectTitle" style="color:var(--text-primary);"></strong>
+          </p>
+          <div class="mb-4">
+            <label class="form-label-forge" for="teacher_note">Note for Student (optional)</label>
+            <textarea id="teacher_note" name="teacher_note" class="form-control-forge" rows="3"
+              placeholder="Explain why this request is being rejected…"></textarea>
+          </div>
+          <div class="modal-footer px-0 pb-0">
+            <button type="button" class="btn-forge btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-forge btn-danger">
+              <i class="bi bi-x-lg"></i> Confirm Reject
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+// Tab filter
+function filterTab(status, btn) {
+  document.querySelectorAll('.requests-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.request-card').forEach(card => {
+    const s = card.dataset.status;
+    card.style.display = (status === 'all' || s === status) ? 'block' : 'none';
+  });
+}
+
+// Type filter
+function applyTypeFilter() {
+  const type = document.getElementById('typeFilter').value;
+  document.querySelectorAll('.request-card').forEach(card => {
+    card.style.display = (!type || card.dataset.type === type) ? 'block' : 'none';
+  });
+}
+
+// Reject modal: inject request ID and title
+document.getElementById('rejectModal')?.addEventListener('show.bs.modal', function(e) {
+  const btn = e.relatedTarget;
+  document.getElementById('rejectTitle').textContent = btn.dataset.requestTitle;
+  document.getElementById('rejectForm').action = `/requests/${btn.dataset.requestId}/reject/`;
+});
+
+// Request type radio visual
+document.querySelectorAll('#newRequestModal input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('#newRequestModal .ob-option').forEach(o => o.classList.remove('selected'));
+    this.closest('label').querySelector('.ob-option').classList.add('selected');
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,320 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+  <span class="crumb">Home</span>
+  <span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">Dashboard</span>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4 animate-fadeup">
+  <div>
+    <h1 class="mb-1">
+      Welcome back, <span class="grad-text">{{ user.first_name|default:user.username }}</span> 👋
+    </h1>
+    <p class="mb-0" style="color:var(--text-muted); font-size:0.9rem;">
+      {% now "l, N j" %} · House {{ user.profile.house.name|default:"—" }}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'requests_list' %}" class="btn-forge btn-secondary btn-sm">
+      <i class="bi bi-send"></i> New Request
+    </a>
+    <a href="{% url 'rewards' %}" class="btn-forge btn-gold btn-sm">
+      <i class="bi bi-gift"></i> Rewards
+    </a>
+  </div>
+</div>
+
+<!-- ── ROW 1: STATS ─────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+  <!-- XP HERO CARD -->
+  <div class="col-12 col-lg-5 animate-fadeup delay-1">
+    <div class="xp-hero-card h-100">
+      <div class="level-badge">
+        <i class="bi bi-lightning-charge-fill"></i> LEVEL {{ user.profile.level|default:1 }}
+      </div>
+      <div class="level-number" data-counter="{{ user.profile.level|default:1 }}">{{ user.profile.level|default:1 }}</div>
+      <div class="level-title">{{ user.profile.level_title|default:"Apprentice Forge" }}</div>
+
+      <!-- XP Bar -->
+      <div class="xp-meta">
+        <span class="xp-meta-label">XP Progress</span>
+        <span class="xp-meta-value"><span>{{ user.profile.xp|default:0 }}</span> / {{ user.profile.xp_next_level|default:500 }}</span>
+      </div>
+      <div class="xp-bar-lg">
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-fill" data-percent="{{ user.profile.xp_percent|default:0 }}"></div>
+        </div>
+      </div>
+
+      <!-- Points summary -->
+      <div class="points-row">
+        <div class="pt-item">
+          <span class="pt-value" data-counter="{{ user.profile.total_points|default:0 }}">{{ user.profile.total_points|default:0 }}</span>
+          <span class="pt-label">Total Pts</span>
+        </div>
+        <div class="pt-item">
+          <span class="pt-value" data-counter="{{ user.profile.weekly_points|default:0 }}">{{ user.profile.weekly_points|default:0 }}</span>
+          <span class="pt-label">This Week</span>
+        </div>
+        <div class="pt-item">
+          <span class="pt-value">#{{ user.profile.rank|default:"—" }}</span>
+          <span class="pt-label">Rank</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS GRID -->
+  <div class="col-12 col-lg-7 animate-fadeup delay-2">
+    <div class="row g-3 h-100">
+      <div class="col-6">
+        <div class="stat-card h-100">
+          <div class="stat-label">Badges Earned</div>
+          <div class="stat-value" data-counter="{{ user.profile.badges_count|default:0 }}">{{ user.profile.badges_count|default:0 }}</div>
+          <div class="stat-delta text-success"><i class="bi bi-arrow-up-short"></i> +2 this week</div>
+          <div class="stat-icon" style="background:rgba(245,200,66,0.12); color:var(--accent-gold);">
+            <i class="bi bi-award-fill"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="stat-card h-100">
+          <div class="stat-label">House Rank</div>
+          <div class="stat-value">#{{ user.profile.house_rank|default:"—" }}</div>
+          <div class="stat-delta" style="color:var(--text-muted);">in House {{ user.profile.house.name|default:"—" }}</div>
+          <div class="stat-icon" style="background:rgba(79,142,247,0.12); color:var(--accent-blue);">
+            <i class="bi bi-shield-fill"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="stat-card h-100">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value">{{ user.profile.streak|default:0 }}<span style="font-size:1.2rem; margin-left:4px;">🔥</span></div>
+          <div class="stat-delta text-success">Keep it up!</div>
+          <div class="stat-icon" style="background:rgba(249,115,22,0.12); color:#f97316;">
+            <i class="bi bi-lightning-fill"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="stat-card h-100">
+          <div class="stat-label">Completed Tasks</div>
+          <div class="stat-value" data-counter="{{ user.profile.tasks_completed|default:0 }}">{{ user.profile.tasks_completed|default:0 }}</div>
+          <div class="stat-delta text-success"><i class="bi bi-check2-all"></i> All time</div>
+          <div class="stat-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ROW 2: LEADERBOARD + HOUSE RANKING + QUICK ACTIONS ── -->
+<div class="row g-4 mb-4">
+
+  <!-- MINI LEADERBOARD -->
+  <div class="col-12 col-md-5 col-xl-4 animate-fadeup delay-3">
+    <div class="card-glass h-100 p-0" style="overflow:hidden;">
+      <div class="p-4 pb-3">
+        <div class="section-header mb-0">
+          <span class="section-title"><span class="dot" style="background:var(--accent-gold);"></span>Top Students</span>
+          <a href="{% url 'leaderboard' %}" class="btn-forge btn-ghost btn-sm">
+            View All <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      <div style="padding: 0 var(--space-2) var(--space-4);">
+        {% for student in top_students %}
+        <a href="{% url 'profile_detail' student.user.username %}" class="lb-row {% if student.user == user %}lb-self{% endif %}">
+          <span class="lb-rank">
+            {% if forloop.counter == 1 %}🥇
+            {% elif forloop.counter == 2 %}🥈
+            {% elif forloop.counter == 3 %}🥉
+            {% else %}<span class="rank-num">{{ forloop.counter }}</span>
+            {% endif %}
+          </span>
+          {% if student.avatar %}
+            <img src="{{ student.avatar.url }}" alt="{{ student.user.username }}" class="avatar avatar-sm" />
+          {% else %}
+            <div class="avatar-placeholder avatar-sm">{{ student.user.username|first|upper }}</div>
+          {% endif %}
+          <div class="lb-info">
+            <div class="lb-name">
+              {{ student.user.get_full_name|default:student.user.username }}
+              {% if student.user == user %}<span class="badge-forge badge-blue ms-1">You</span>{% endif %}
+            </div>
+            <div class="lb-sub">
+              <span class="badge-forge badge-{% if student.house.name == 'Ignis' %}ignis{% elif student.house.name == 'Aqua' %}aqua{% elif student.house.name == 'Terra' %}terra{% else %}ventus{% endif %}">
+                {{ student.house.name|default:"—" }}
+              </span>
+            </div>
+          </div>
+          <span class="lb-pts">{{ student.total_points }}</span>
+        </a>
+        {% empty %}
+        <div class="empty-state py-4">
+          <div class="empty-icon">🏆</div>
+          <p>No rankings yet</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- HOUSE RANKING -->
+  <div class="col-12 col-md-7 col-xl-4 animate-fadeup delay-4">
+    <div class="card-glass h-100">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-purple);"></span>House Ranking</span>
+        <a href="{% url 'houses' %}" class="btn-forge btn-ghost btn-sm">Houses <i class="bi bi-arrow-right"></i></a>
+      </div>
+
+      {% for house in house_rankings %}
+      <div class="house-rank-item rank-{{ forloop.counter }}">
+        <span class="house-rank-num">
+          {% if forloop.counter == 1 %}🏆
+          {% elif forloop.counter == 2 %}🥈
+          {% elif forloop.counter == 3 %}🥉
+          {% else %}{{ forloop.counter }}{% endif %}
+        </span>
+        <div class="house-emblem-sm"
+          style="background: {% if house.name == 'Ignis' %}var(--house-ignis-bg){% elif house.name == 'Aqua' %}var(--house-aqua-bg){% elif house.name == 'Terra' %}var(--house-terra-bg){% else %}var(--house-ventus-bg){% endif %};">
+          {% if house.name == 'Ignis' %}🔥{% elif house.name == 'Aqua' %}💧{% elif house.name == 'Terra' %}🌿{% else %}🌪{% endif %}
+        </div>
+        <div class="house-rank-info">
+          <div class="house-rank-name">{{ house.name }}</div>
+          <div class="house-rank-pts">{{ house.total_points|default:0 }} pts · {{ house.member_count }} members</div>
+        </div>
+        <!-- mini bar -->
+        <div style="width:80px;">
+          <div class="xp-bar-sm">
+            <div class="xp-bar-wrap">
+              <div class="xp-bar-fill" data-percent="{{ house.percent|default:0 }}"
+                style="background: {% if house.name == 'Ignis' %}var(--house-ignis){% elif house.name == 'Aqua' %}var(--house-aqua){% elif house.name == 'Terra' %}var(--house-terra){% else %}var(--house-ventus){% endif %};"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state py-4">
+        <div class="empty-icon">🛡</div>
+        <p>No houses found</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS + NOTIFICATIONS -->
+  <div class="col-12 col-xl-4 animate-fadeup delay-5">
+    <div class="card-glass mb-4">
+      <div class="section-header">
+        <span class="section-title"><span class="dot"></span>Quick Actions</span>
+      </div>
+      <div class="quick-action-grid">
+        <a href="{% url 'requests_list' %}?type=new" class="quick-action-btn">
+          <div class="qa-icon" style="background:rgba(79,142,247,0.12); color:var(--accent-blue);">
+            <i class="bi bi-send-fill"></i>
+          </div>
+          <span class="qa-label">Send Request</span>
+          <span class="qa-sub">To teacher</span>
+        </a>
+        <a href="{% url 'rewards' %}" class="quick-action-btn">
+          <div class="qa-icon" style="background:rgba(245,200,66,0.12); color:var(--accent-gold);">
+            <i class="bi bi-gift-fill"></i>
+          </div>
+          <span class="qa-label">Redeem</span>
+          <span class="qa-sub">Spend points</span>
+        </a>
+        <a href="{% url 'leaderboard' %}" class="quick-action-btn">
+          <div class="qa-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">
+            <i class="bi bi-trophy-fill"></i>
+          </div>
+          <span class="qa-label">Leaderboard</span>
+          <span class="qa-sub">See rankings</span>
+        </a>
+        <a href="{% url 'profile' %}" class="quick-action-btn">
+          <div class="qa-icon" style="background:rgba(139,92,246,0.12); color:var(--accent-purple);">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <span class="qa-label">Profile</span>
+          <span class="qa-sub">View & edit</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- RECENT NOTIFICATIONS -->
+    <div class="card-glass">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-rose);"></span>Notifications</span>
+        <a href="{% url 'notifications' %}" class="btn-forge btn-ghost btn-sm">All</a>
+      </div>
+      {% for notif in recent_notifications %}
+      <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+        <div class="notif-icon"
+          style="background: {% if notif.type == 'xp' %}rgba(79,142,247,0.12)
+                 {% elif notif.type == 'badge' %}rgba(245,200,66,0.12)
+                 {% elif notif.type == 'house' %}rgba(139,92,246,0.12)
+                 {% else %}rgba(16,185,129,0.12){% endif %};">
+          {% if notif.type == 'xp' %}⚡{% elif notif.type == 'badge' %}🏅{% elif notif.type == 'house' %}🛡{% else %}🎁{% endif %}
+        </div>
+        <div class="notif-body">
+          <div class="notif-text">{{ notif.message }}</div>
+          <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty-state py-3">
+        <div class="empty-icon">🔔</div>
+        <p>No notifications yet</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ── ROW 3: ACTIVITY FEED ─────────────────────────────── -->
+<div class="row g-4 animate-fadeup delay-6">
+  <div class="col-12">
+    <div class="card-glass">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-teal);"></span>Recent Activity</span>
+        <span class="badge-forge badge-muted">{{ recent_activities|length }} events</span>
+      </div>
+      {% for activity in recent_activities %}
+      <div class="activity-item">
+        <div class="activity-icon-wrap ic-{{ activity.type }}">
+          {% if activity.type == 'xp' %}⚡
+          {% elif activity.type == 'badge' %}🏅
+          {% elif activity.type == 'house' %}🛡
+          {% elif activity.type == 'reward' %}🎁
+          {% else %}📋{% endif %}
+        </div>
+        <div class="activity-body">
+          <div class="activity-text">{{ activity.description|safe }}</div>
+          <div class="activity-time">{{ activity.timestamp|timesince }} ago · {{ activity.category|default:"General" }}</div>
+        </div>
+        {% if activity.points %}
+          <span class="badge-forge badge-{% if activity.points > 0 %}green{% else %}red{% endif %}">
+            {% if activity.points > 0 %}+{% endif %}{{ activity.points }} pts
+          </span>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p>No recent activity</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

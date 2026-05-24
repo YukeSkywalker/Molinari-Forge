@@ -1,0 +1,198 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb">Profile</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">{{ profile_user.username }}</span>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── PROFILE HERO ── -->
+<div class="profile-hero animate-fadeup">
+  <div class="profile-info">
+    <div class="profile-avatar-wrap">
+      <div class="avatar-ring">
+        {% if profile.avatar %}
+          <img src="{{ profile.avatar.url }}" alt="{{ profile_user.username }}" class="avatar avatar-xl" style="border-radius:50%;" />
+        {% else %}
+          <div class="avatar-placeholder avatar-xl">{{ profile_user.username|first|upper }}</div>
+        {% endif %}
+      </div>
+      <span class="profile-level-pin">Lv.{{ profile.level|default:1 }}</span>
+    </div>
+    <div class="profile-details">
+      <div class="profile-name">
+        {% if profile_user == user %}<span class="badge-forge badge-blue ms-2" style="font-size:.7rem;">You</span>{% endif %}
+      </div>
+      <div class="profile-tagline">@{{ profile_user.username }}{% if profile.bio %} · {{ profile.bio }}{% endif %}</div>
+      <div class="profile-badges-row">
+        {% if profile.house %}
+        <span class="badge-forge badge-{{ profile.house.name|lower }}">
+          {% if profile.house.name == 'Ignis' %}🔥{% elif profile.house.name == 'Aqua' %}💧{% elif profile.house.name == 'Terra' %}🌿{% else %}🌪{% endif %}
+          {{ profile.house.name }}
+        </span>
+        {% endif %}
+        <span class="badge-forge badge-student">Student</span>
+        {% if profile.streak %}
+          <span class="badge-forge badge-gold">{{ profile.streak }}🔥 Streak</span>
+        {% endif %}
+        {% if profile.rank == 1 %}
+          <span class="badge-forge badge-gold">👑 Top Student</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Edit / Actions -->
+    <div class="ms-auto d-flex gap-2 align-self-start" style="margin-top:40px;">
+      {% if profile_user == user %}
+      <a href="{% url 'profile_edit' %}" class="btn-forge btn-secondary btn-sm">
+        <i class="bi bi-pencil"></i> Edit Profile
+      </a>
+      {% else %}
+      <button class="btn-forge btn-ghost btn-sm" onclick="MF.Toast.info('Coming soon','Challenge feature is in development.')">
+        <i class="bi bi-lightning-fill"></i> Challenge
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS ROW ── -->
+<div class="row g-4 mb-6 animate-fadeup delay-1">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-label">Total Points</div>
+      <div class="stat-value" data-counter="{{ profile.total_points|default:0 }}">{{ profile.total_points|default:0 }}</div>
+      <div class="stat-icon" style="background:rgba(245,200,66,.12);color:var(--accent-gold);"><i class="bi bi-star-fill"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-label">Global Rank</div>
+      <div class="stat-value">#{{ profile.rank|default:"—" }}</div>
+      <div class="stat-icon" style="background:rgba(79,142,247,.12);color:var(--accent-blue);"><i class="bi bi-trophy-fill"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-label">Badges</div>
+      <div class="stat-value" data-counter="{{ profile.badges_count|default:0 }}">{{ profile.badges_count|default:0 }}</div>
+      <div class="stat-icon" style="background:rgba(139,92,246,.12);color:var(--accent-purple);"><i class="bi bi-award-fill"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-label">Day Streak</div>
+      <div class="stat-value">{{ profile.streak|default:0 }} <span style="font-size:1.5rem;">🔥</span></div>
+      <div class="stat-icon" style="background:rgba(249,115,22,.12);color:#f97316;"><i class="bi bi-lightning-fill"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── XP LEVEL CARD ── -->
+<div class="row g-4 mb-6">
+  <div class="col-12 col-lg-5 animate-fadeup delay-2">
+    <div class="card-glass h-100">
+      <div class="section-header">
+        <span class="section-title"><span class="dot"></span>XP Progress</span>
+        <span class="badge-forge badge-blue">Level {{ profile.level|default:1 }}</span>
+      </div>
+
+      <div style="text-align:center;padding:var(--space-4) 0;">
+        <div style="font-family:var(--font-display);font-size:3rem;font-weight:800;background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          {{ profile.level|default:1 }}
+        </div>
+        <div style="font-size:1rem;font-weight:600;color:var(--text-secondary);margin-bottom:var(--space-6);">
+          {{ profile.level_title|default:"Apprentice Forge" }}
+        </div>
+      </div>
+
+      <div class="xp-meta mb-2">
+        <span class="xp-meta-label">XP to next level</span>
+        <span class="xp-meta-value"><span>{{ profile.xp|default:0 }}</span> / {{ profile.xp_next_level|default:500 }}</span>
+      </div>
+      <div class="xp-bar-lg mb-6">
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-fill" data-percent="{{ profile.xp_percent|default:0 }}"></div>
+        </div>
+      </div>
+
+      <!-- Mini timeline of levels -->
+      <div style="display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;">
+        {% for lvl in level_milestones %}
+        <div style="flex:1;text-align:center;min-width:50px;">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-1);font-size:.75rem;font-weight:800;
+            {% if profile.level >= lvl.number %}background:var(--grad-primary);color:#fff;{% else %}background:var(--bg-base);border:1px solid var(--border-default);color:var(--text-muted);{% endif %}">
+            {{ lvl.number }}
+          </div>
+          <div style="font-size:.6rem;color:var(--text-muted);">{{ lvl.title|truncatechars:8 }}</div>
+        </div>
+        {% empty %}
+      
+        <div style="flex:1;text-align:center;">
+          <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-1);font-size:.75rem;font-weight:800;
+            {% if profile.level >= n|add:0 %}background:var(--grad-primary);color:#fff;{% else %}background:var(--bg-base);border:1px solid var(--border-default);color:var(--text-muted);{% endif %}">{{ n }}</div>
+        </div>
+        {% endfor %}
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENTS / BADGES -->
+  <div class="col-12 col-lg-7 animate-fadeup delay-3">
+    <div class="card-glass h-100">
+      <div class="section-header">
+        <span class="section-title"><span class="dot" style="background:var(--accent-gold);"></span>Achievements</span>
+        <span class="badge-forge badge-muted">{{ profile.badges_count|default:0 }} earned</span>
+      </div>
+      <div class="achievement-grid">
+        {% for badge in all_badges %}
+        <div class="achievement-card {% if badge not in profile.badges.all %}locked{% endif %}"
+          title="{{ badge.name }}: {{ badge.description }}">
+          <div class="ach-icon">{{ badge.icon|default:"🏅" }}</div>
+          <div class="ach-name">{{ badge.name }}</div>
+          <div class="ach-pts">{{ badge.xp_value }} XP</div>
+        </div>
+        {% empty %}
+        <!-- Static fallback badges -->
+       
+        <div class="achievement-card">
+          <div class="ach-icon">{{ b|slice:":2" }}</div>
+          <div class="ach-name" style="font-size:.65rem;">{{ b|slice:"3:" }}</div>
+          <div class="ach-pts">+50 XP</div>
+        </div>
+        {% endfor %}
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACTIVITY HISTORY ── -->
+<div class="card-glass animate-fadeup delay-4">
+  <div class="section-header">
+    <span class="section-title"><span class="dot" style="background:var(--accent-teal);"></span>Point History</span>
+    <span style="font-size:.78rem;color:var(--text-muted);">Last 30 days</span>
+  </div>
+  {% for entry in point_history %}
+  <div class="activity-item">
+    <div class="activity-icon-wrap ic-{{ entry.type|default:'xp' }}">
+      {% if entry.type == 'xp' %}⚡{% elif entry.type == 'badge' %}🏅{% elif entry.type == 'reward' %}🎁{% else %}📋{% endif %}
+    </div>
+    <div class="activity-body">
+      <div class="activity-text">{{ entry.description }}</div>
+      <div class="activity-time">{{ entry.created_at|date:"d M Y" }} · {{ entry.awarded_by.get_full_name|default:entry.awarded_by.username|default:"System" }}</div>
+    </div>
+    <span class="badge-forge {% if entry.delta >= 0 %}badge-green{% else %}badge-red{% endif %}">
+      {% if entry.delta >= 0 %}+{% endif %}{{ entry.delta }} pts
+    </span>
+  </div>
+  {% empty %}
+  <div class="empty-state"><div class="empty-icon">📋</div><p>No point history yet</p></div>
+  {% endfor %}
+</div>
+
+{% endblock %}

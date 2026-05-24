@@ -1,0 +1,286 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Leaderboard{% endblock %}
+{% block breadcrumb %}
+  <span class="crumb">Home</span><span class="crumb-sep"><i class="bi bi-chevron-right"></i></span>
+  <span class="crumb-current">Leaderboard</span>
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-start justify-content-between mb-4 animate-fadeup">
+  <div>
+    <h1 class="mb-1">Leaderboard</h1>
+    <p class="mb-0" style="color:var(--text-muted);">Global rankings — updated in real time.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{#}" class="btn-forge btn-secondary btn-sm">
+      <i class="bi bi-download"></i> Export
+    </a>
+  </div>
+</div>
+
+<!-- TABS: Students vs Houses -->
+<div class="d-flex gap-0 mb-6 animate-fadeup delay-1">
+  <div class="requests-tabs">
+    <button class="requests-tab active" id="tabStudents" onclick="switchTab('students')">
+      Students
+      <span class="tab-count">{{ total_students|default:0 }}</span>
+    </button>
+    <button class="requests-tab" id="tabHouses" onclick="switchTab('houses')">
+      Houses
+      <span class="tab-count">4</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── STUDENTS PANEL ── -->
+<div id="panelStudents">
+
+  <!-- PODIUM (top 3) -->
+  <div class="card-glass mb-6 animate-fadeup delay-2" style="padding:var(--space-8);">
+    <div class="d-flex align-items-center justify-content-between mb-6">
+      <span class="section-title"><span class="dot" style="background:var(--accent-gold);"></span>Season Leaders</span>
+      <!-- Filter pills -->
+      <div class="lb-filters" style="margin-bottom:0;">
+        <button class="lb-filter-btn active" data-filter="all">All Time</button>
+        <button class="lb-filter-btn" data-filter="month">This Month</button>
+        <button class="lb-filter-btn" data-filter="week">This Week</button>
+      </div>
+    </div>
+
+    {% if top3 %}
+    <div class="lb-podium justify-content-center" style="height:180px;gap:var(--space-4);">
+      <!-- 2nd -->
+      {% with student=top3.1 %}
+      <div class="lb-podium-item" style="flex:1;max-width:140px;">
+        <div class="pod-avatar">
+          {% if student.profile.avatar %}
+            <img src="{{ student.profile.avatar.url }}" alt="{{ student.username }}" class="avatar avatar-lg" />
+          {% else %}
+            <div class="avatar-placeholder avatar-lg">{{ student.username|first|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="pod-name">{{ student.get_full_name|default:student.username }}</div>
+        <div class="pod-pts">{{ student.profile.total_points }}</div>
+        <div class="pod-base silver w-100">2</div>
+      </div>
+      {% endwith %}
+
+      <!-- 1st -->
+      {% with student=top3.0 %}
+      <div class="lb-podium-item" style="flex:1;max-width:160px;">
+        <div class="pod-avatar">
+          <span class="pod-crown">👑</span>
+          {% if student.profile.avatar %}
+            <img src="{{ student.profile.avatar.url }}" alt="{{ student.username }}" class="avatar avatar-xl" />
+          {% else %}
+            <div class="avatar-placeholder avatar-xl">{{ student.username|first|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="pod-name" style="font-size:.875rem;font-weight:800;color:var(--accent-gold);">{{ student.get_full_name|default:student.username }}</div>
+        <div class="pod-pts" style="color:var(--accent-gold);">{{ student.profile.total_points }}</div>
+        <div class="pod-base gold w-100">1</div>
+      </div>
+      {% endwith %}
+
+      <!-- 3rd -->
+      {% with student=top3.2 %}
+      <div class="lb-podium-item" style="flex:1;max-width:140px;">
+        <div class="pod-avatar">
+          {% if student.profile.avatar %}
+            <img src="{{ student.profile.avatar.url }}" alt="{{ student.username }}" class="avatar avatar-lg" />
+          {% else %}
+            <div class="avatar-placeholder avatar-lg">{{ student.username|first|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="pod-name">{{ student.get_full_name|default:student.username }}</div>
+        <div class="pod-pts">{{ student.profile.total_points }}</div>
+        <div class="pod-base bronze w-100">3</div>
+      </div>
+      {% endwith %}
+    </div>
+    {% else %}
+    <div class="empty-state py-4"><div class="empty-icon">🏆</div><p>No rankings yet</p></div>
+    {% endif %}
+  </div>
+
+  <!-- FULL RANKING TABLE -->
+  <div class="card-glass animate-fadeup delay-3">
+    <div class="section-header">
+      <span class="section-title"><span class="dot"></span>Full Rankings</span>
+      <!-- Search -->
+      <div style="position:relative;">
+        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.875rem;"><i class="bi bi-search"></i></span>
+        <input type="search" id="lbSearch" placeholder="Search student…"
+          style="background:var(--bg-base);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-body);font-size:.8125rem;padding:7px 12px 7px 32px;width:200px;" />
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table class="table-forge" id="lbTable">
+        <thead>
+          <tr>
+            <th style="width:60px;">Rank</th>
+            <th>Student</th>
+            <th>House</th>
+            <th>Level</th>
+            <th>Total Points</th>
+            <th>Weekly Pts</th>
+            <th>Badges</th>
+            <th>Streak</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for profile in leaderboard %}
+          <tr class="rank-{{ forloop.counter }} {% if profile.user == user %}lb-self-row{% endif %}"
+            {% if profile.user == user %}style="background:rgba(79,142,247,.05);"{% endif %}>
+            <td class="rank-cell">
+              <span class="rank-num">
+                {% if forloop.counter == 1 %}🥇
+                {% elif forloop.counter == 2 %}🥈
+                {% elif forloop.counter == 3 %}🥉
+                {% else %}{{ forloop.counter }}{% endif %}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:var(--space-3);">
+                {% if profile.avatar %}
+                  <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}" class="avatar avatar-sm" />
+                {% else %}
+                  <div class="avatar-placeholder avatar-sm">{{ profile.user.username|first|upper }}</div>
+                {% endif %}
+                <div>
+                  <div style="font-weight:600;font-size:.875rem;color:var(--text-primary);">
+                    {{ profile.user.get_full_name|default:profile.user.username }}
+                    {% if profile.user == user %}<span class="badge-forge badge-blue ms-1">You</span>{% endif %}
+                  </div>
+                  <div style="font-size:.72rem;color:var(--text-muted);">@{{ profile.user.username }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge-forge badge-{{ profile.house.name|lower|default:'muted' }}">
+                {% if profile.house.name == 'Ignis' %}🔥{% elif profile.house.name == 'Aqua' %}💧{% elif profile.house.name == 'Terra' %}🌿{% elif profile.house.name == 'Ventus' %}🌪{% endif %}
+                {{ profile.house.name|default:"—" }}
+              </span>
+            </td>
+            <td>
+              <span style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:var(--font-display);font-weight:700;">
+                Lv.{{ profile.level|default:1 }}
+              </span>
+            </td>
+            <td>
+              <span style="font-family:var(--font-mono);font-weight:700;color:var(--accent-gold);">{{ profile.total_points|default:0 }}</span>
+            </td>
+            <td>
+              <span style="font-family:var(--font-mono);color:var(--accent-blue);">+{{ profile.weekly_points|default:0 }}</span>
+            </td>
+            <td>
+              <span style="font-family:var(--font-mono);">{{ profile.badges_count|default:0 }}</span>
+            </td>
+            <td>
+              {% if profile.streak %}
+              <span style="color:#f97316;">{{ profile.streak }}🔥</span>
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" style="text-align:center;padding:var(--space-8);color:var(--text-muted);">No students ranked yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-4) 0;border-top:1px solid var(--border-subtle);margin-top:var(--space-4);">
+      <span style="font-size:.8125rem;color:var(--text-muted);">
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+      </span>
+      <div style="display:flex;gap:var(--space-2);">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" class="btn-forge btn-ghost btn-sm"><i class="bi bi-chevron-left"></i></a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <button class="btn-forge btn-primary btn-sm" style="min-width:36px;">{{ num }}</button>
+          {% elif num|add:"-2" <= page_obj.number and num <= page_obj.number|add:"2" %}
+            <a href="?page={{ num }}" class="btn-forge btn-secondary btn-sm" style="min-width:36px;">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="btn-forge btn-ghost btn-sm"><i class="bi bi-chevron-right"></i></a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── HOUSES PANEL ── -->
+<div id="panelHouses" style="display:none;">
+  <div class="row g-4">
+    {% for house in house_rankings %}
+    <div class="col-12 animate-fadeup">
+      <div class="card-glass" style="padding:var(--space-6);">
+        <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono);font-weight:800;font-size:1.5rem;color:
+            {% if forloop.counter == 1 %}var(--accent-gold)
+            {% elif forloop.counter == 2 %}#b0b8c8
+            {% elif forloop.counter == 3 %}#cd7f32
+            {% else %}var(--text-muted){% endif %};
+            width:40px;text-align:center;">
+            {% if forloop.counter == 1 %}🏆{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+          </span>
+          <div class="house-emblem-sm" style="width:48px;height:48px;background:{% if house.name|lower == 'ignis' %}var(--house-ignis-bg){% elif house.name|lower == 'aqua' %}var(--house-aqua-bg){% elif house.name|lower == 'terra' %}var(--house-terra-bg){% else %}var(--house-ventus-bg){% endif %};">
+            {% if house.name|lower == 'ignis' %}🔥{% elif house.name|lower == 'aqua' %}💧{% elif house.name|lower == 'terra' %}🌿{% else %}🌪{% endif %}
+          </div>
+          <div style="flex:1;">
+            <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;color:var(--text-primary);">
+              {{ house.name }}
+              {% if user.profile.house.name == house.name %}<span class="badge-forge badge-blue ms-2">Your House</span>{% endif %}
+            </div>
+            <div style="font-size:.78rem;color:var(--text-muted);">{{ house.member_count }} members</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--font-display);font-weight:800;font-size:1.75rem;color:var(--accent-gold);">{{ house.total_points|default:0 }}</div>
+            <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;">Total Points</div>
+          </div>
+          <div style="width:200px;">
+            <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:4px;">Season Progress</div>
+            <div class="xp-bar-wrap">
+              <div class="xp-bar-fill" data-percent="{{ house.percent|default:0 }}"
+                style="background:{% if house.name|lower == 'ignis' %}var(--house-ignis){% elif house.name|lower == 'aqua' %}var(--house-aqua){% elif house.name|lower == 'terra' %}var(--house-terra){% else %}var(--house-ventus){% endif %};"></div>
+            </div>
+          </div>
+          <a href="{% url 'house_detail' house.slug %}" class="btn-forge btn-secondary btn-sm">
+            View <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12"><div class="empty-state"><div class="empty-icon">🛡</div><p>No house data</p></div></div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('tabStudents').classList.toggle('active', tab === 'students');
+  document.getElementById('tabHouses').classList.toggle('active', tab === 'houses');
+  document.getElementById('panelStudents').style.display = tab === 'students' ? 'block' : 'none';
+  document.getElementById('panelHouses').style.display   = tab === 'houses'   ? 'block' : 'none';
+}
+
+// Live search in table
+document.getElementById('lbSearch')?.addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#lbTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}
