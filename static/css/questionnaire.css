@@ -1,0 +1,231 @@
+/* ============================================================
+   MOLINARI FORGE — QUESTIONNAIRE PAGE
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.quest-body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0a0b0f;
+  color: #f0f2f7;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(79,142,247,0.07) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(139,92,246,0.06) 0%, transparent 50%);
+}
+
+.quest-container {
+  width: 100%;
+  max-width: 640px;
+}
+
+.quest-card {
+  background: #111318;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* Header */
+.quest-header { text-align: center; margin-bottom: 32px; }
+
+.quest-logo {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.quest-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.quest-sub {
+  font-size: 0.9rem;
+  color: #8892a4;
+}
+
+.quest-sub strong { color: #f0f2f7; }
+
+/* Progress */
+.quest-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.qp-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.qp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f8ef7, #8b5cf6);
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  width: 50%;
+}
+
+.qp-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4e5869;
+  white-space: nowrap;
+}
+
+/* Steps */
+.quest-step { display: none; }
+.quest-step.active { display: block; animation: fadeSlideUp 0.3s ease; }
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.quest-q {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #f0f2f7;
+  margin-bottom: 20px;
+}
+
+/* Options */
+.quest-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.quest-opt input { display: none; }
+
+.qopt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: #181c24;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qopt-card:hover {
+  border-color: rgba(79,142,247,0.3);
+  background: #1e2330;
+  transform: translateY(-1px);
+}
+
+.qopt-card.selected {
+  border-color: #4f8ef7;
+  background: rgba(79,142,247,0.1);
+  box-shadow: 0 0 0 1px rgba(79,142,247,0.3);
+}
+
+.qopt-icon { font-size: 1.5rem; }
+
+.qopt-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #f0f2f7;
+}
+
+.qopt-desc {
+  font-size: 0.75rem;
+  color: #4e5869;
+  line-height: 1.4;
+}
+
+/* Buttons */
+.btn-quest-next, .btn-quest-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-quest-next {
+  background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(79,142,247,0.3);
+}
+
+.btn-quest-submit {
+  background: linear-gradient(135deg, #f5c842, #f97316);
+  color: #0a0b0f;
+  box-shadow: 0 4px 14px rgba(245,200,66,0.3);
+}
+
+.btn-quest-next:hover, .btn-quest-submit:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-quest-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 13px 20px;
+  color: #8892a4;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-quest-back:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: #f0f2f7;
+}
+
+.quest-btns { display: flex; gap: 12px; }
+.quest-btns .btn-quest-submit { flex: 1; }
+
+/* Error */
+.field-error {
+  font-size: 0.78rem;
+  color: #fb7185;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+  .quest-card { padding: 24px 20px; }
+  .quest-options { grid-template-columns: 1fr; }
+}

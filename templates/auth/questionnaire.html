@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scegli la tua Casata — Molinari Forge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'css/design-system.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/questionnaire.css' %}" />
+</head>
+<body class="quest-body">
+
+<div class="quest-container">
+  <div class="quest-card">
+
+    <!-- Header -->
+    <div class="quest-header">
+      <div class="quest-logo">⚒</div>
+      <h1 class="quest-title">Scopri la tua Casata</h1>
+      <p class="quest-sub">Benvenuto, <strong>{{ user.first_name }}</strong>! Rispondi a queste domande per scoprire dove appartieni.</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="quest-progress">
+      <div class="qp-bar"><div class="qp-fill" id="progressFill"></div></div>
+      <span class="qp-label" id="progressLabel">1 / 2</span>
+    </div>
+
+    <form method="post" id="questForm" novalidate>
+      {% csrf_token %}
+
+      <!-- Domanda 1 -->
+      <div class="quest-step active" data-step="1">
+        <h3 class="quest-q">Come preferisci affrontare un problema?</h3>
+        <div class="quest-options">
+          <label class="quest-opt">
+            <input type="radio" name="thinking_style" value="logic" required />
+            <div class="qopt-card">
+              <span class="qopt-icon">🧠</span>
+              <span class="qopt-title">Logica & Algoritmi</span>
+              <span class="qopt-desc">Risolvo con ragionamento preciso e strutturato</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="thinking_style" value="creative" />
+            <div class="qopt-card">
+              <span class="qopt-icon">⚙️</span>
+              <span class="qopt-title">Creatività & Build</span>
+              <span class="qopt-desc">Costruisco soluzioni nuove sperimentando</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="thinking_style" value="security" />
+            <div class="qopt-card">
+              <span class="qopt-icon">🔐</span>
+              <span class="qopt-title">Sicurezza & Difesa</span>
+              <span class="qopt-desc">Penso prima alle vulnerabilità e alla protezione</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="thinking_style" value="network" />
+            <div class="qopt-card">
+              <span class="qopt-icon">🌐</span>
+              <span class="qopt-title">Reti & Connessioni</span>
+              <span class="qopt-desc">Mi interessa come i sistemi comunicano</span>
+            </div>
+          </label>
+        </div>
+        <div class="field-error hidden" id="err1">Seleziona una risposta</div>
+        <button type="button" class="btn-quest-next" onclick="nextStep(1)">
+          Avanti <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Domanda 2 -->
+      <div class="quest-step" data-step="2">
+        <h3 class="quest-q">Qual è la sfida che ti emoziona di più?</h3>
+        <div class="quest-options">
+          <label class="quest-opt">
+            <input type="radio" name="challenge" value="algorithms" required />
+            <div class="qopt-card">
+              <span class="qopt-icon">📐</span>
+              <span class="qopt-title">Ottimizzare algoritmi</span>
+              <span class="qopt-desc">Trovare la soluzione più elegante ed efficiente</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="challenge" value="building" />
+            <div class="qopt-card">
+              <span class="qopt-icon">🛠️</span>
+              <span class="qopt-title">Costruire applicazioni</span>
+              <span class="qopt-desc">Creare qualcosa di funzionale dal nulla</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="challenge" value="hacking" />
+            <div class="qopt-card">
+              <span class="qopt-icon">🕵️</span>
+              <span class="qopt-title">CTF & Hacking etico</span>
+              <span class="qopt-desc">Trovare vulnerabilità prima dei malintenzionati</span>
+            </div>
+          </label>
+          <label class="quest-opt">
+            <input type="radio" name="challenge" value="networks" />
+            <div class="qopt-card">
+              <span class="qopt-icon">📡</span>
+              <span class="qopt-title">Progettare reti</span>
+              <span class="qopt-desc">Connettere sistemi in modo efficiente e sicuro</span>
+            </div>
+          </label>
+        </div>
+        <div class="field-error hidden" id="err2">Seleziona una risposta</div>
+        <div class="quest-btns">
+          <button type="button" class="btn-quest-back" onclick="prevStep(2)">
+            <i class="bi bi-arrow-left"></i> Indietro
+          </button>
+          <button type="submit" class="btn-quest-submit">
+            <i class="bi bi-lightning-charge-fill"></i> Scopri la mia Casata!
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 2;
+
+function updateProgress() {
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  fill.style.width = ((currentStep / totalSteps) * 100) + '%';
+  label.textContent = currentStep + ' / ' + totalSteps;
+}
+
+function nextStep(from) {
+  const radios = document.querySelectorAll(`input[name="${from === 1 ? 'thinking_style' : 'challenge'}"]`);
+  const checked = Array.from(radios).some(r => r.checked);
+  if (!checked) {
+    document.getElementById('err' + from).classList.remove('hidden');
+    return;
+  }
+  document.getElementById('err' + from).classList.add('hidden');
+  document.querySelector(`[data-step="${from}"]`).classList.remove('active');
+  currentStep = from + 1;
+  document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+  updateProgress();
+}
+
+function prevStep(from) {
+  document.querySelector(`[data-step="${from}"]`).classList.remove('active');
+  currentStep = from - 1;
+  document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+  updateProgress();
+}
+
+// Selezione visiva opzioni
+document.querySelectorAll('.quest-opt input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const group = this.closest('.quest-options');
+    group.querySelectorAll('.qopt-card').forEach(c => c.classList.remove('selected'));
+    this.closest('.quest-opt').querySelector('.qopt-card').classList.add('selected');
+  });
+});
+
+updateProgress();
+</script>
+</body>
+</html>

@@ -1,148 +1,96 @@
 {% extends 'layout/base_auth.html' %}
 {% load static %}
 
-{% block title %}Sign In{% endblock %}
+{% block title %}Accedi{% endblock %}
 
 {% block auth_content %}
 
-<!-- BRAND -->
-<div class="auth-brand">
-  <div class="auth-brand-logo">⚒</div>
-  <span class="auth-brand-name">Molinari Forge</span>
+<div class="auth-header">
+  <div class="auth-brand-pill"><span>⚒</span> Molinari Forge</div>
+  <h2 class="auth-title">Bentornato</h2>
+  <p class="auth-subtitle">Accedi per continuare nella tua forge</p>
 </div>
 
-<h2 class="auth-title">Welcome back</h2>
-<p class="auth-subtitle">Sign in to continue to your forge</p>
-
-<!-- FORM -->
-<form method="post" action="{% url 'login' %}" novalidate>
+<form method="post" action="{% url 'login' %}" novalidate class="auth-form">
   {% csrf_token %}
   {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
 
-  <div class="mb-4">
-    <label class="form-label-forge" for="id_username">Username or Email</label>
+  {% if form.non_field_errors %}
+  <div class="forge-alert forge-alert-danger">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    {{ form.non_field_errors.0 }}
+  </div>
+  {% endif %}
+
+  <div class="field-group">
+    <label class="field-label" for="id_username">
+      <i class="bi bi-person"></i> Username o Email
+    </label>
     <input
       type="text"
       id="id_username"
       name="username"
-      class="form-control-forge"
-      placeholder="your@email.com"
+      class="field-input {% if form.username.errors %}is-error{% endif %}"
+      placeholder="tuo@itis-molinari.eu"
       autocomplete="username"
       autofocus
       value="{{ form.username.value|default:'' }}"
     />
     {% if form.username.errors %}
-      <div style="font-size:0.78rem; color:#fb7185; margin-top:var(--space-2);">{{ form.username.errors.0 }}</div>
+      <span class="field-error">{{ form.username.errors.0 }}</span>
     {% endif %}
   </div>
 
-  <div class="mb-2">
-    <label class="form-label-forge" for="id_password">Password</label>
-    <div style="position:relative;">
+  <div class="field-group">
+    <label class="field-label" for="id_password">
+      <i class="bi bi-lock"></i> Password
+    </label>
+    <div class="pw-wrap">
       <input
         type="password"
         id="id_password"
         name="password"
-        class="form-control-forge"
+        class="field-input {% if form.password.errors %}is-error{% endif %}"
         placeholder="••••••••"
         autocomplete="current-password"
-        style="padding-right: 44px;"
       />
-      <button type="button" onclick="togglePassword('id_password', this)"
-        style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0;">
-        <i class="bi bi-eye-fill" id="pwToggleIcon"></i>
+      <button type="button" class="pw-toggle" onclick="togglePw('id_password', this)">
+        <i class="bi bi-eye-fill"></i>
       </button>
     </div>
     {% if form.password.errors %}
-      <div style="font-size:0.78rem; color:#fb7185; margin-top:var(--space-2);">{{ form.password.errors.0 }}</div>
+      <span class="field-error">{{ form.password.errors.0 }}</span>
     {% endif %}
   </div>
 
-  <div class="d-flex align-items-center justify-content-between mb-4">
-    <label style="display:flex; align-items:center; gap:var(--space-2); cursor:pointer;">
-      <input type="checkbox" name="remember_me" id="id_remember" style="accent-color:var(--accent-blue);" />
-      <span style="font-size:0.8125rem; color:var(--text-secondary);">Remember me</span>
+  <div class="auth-row">
+    <label class="remember-label">
+      <input type="checkbox" name="remember_me" id="id_remember" class="remember-check" />
+      <span>Ricordami</span>
     </label>
-    <a href="{% url 'password_reset' %}" style="font-size:0.8125rem; color:var(--accent-blue);">Forgot password?</a>
   </div>
 
-  {% if form.non_field_errors %}
-  <div style="background:rgba(244,63,94,0.08); border:1px solid rgba(244,63,94,0.2); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); margin-bottom:var(--space-4); font-size:0.875rem; color:#fb7185;">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ form.non_field_errors.0 }}
-  </div>
-  {% endif %}
-
-  <button type="submit" class="btn-forge btn-primary w-100 justify-content-center" style="height:44px; font-size:0.9375rem;">
-    Sign In <i class="bi bi-arrow-right"></i>
+  <button type="submit" class="btn-forge-primary">
+    Accedi <i class="bi bi-arrow-right"></i>
   </button>
 </form>
 
-<div class="auth-divider"><span>or continue with</span></div>
-
-<div class="d-flex flex-column gap-2">
-  <button class="social-btn">
-    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
-    Continue with Google
-  </button>
-</div>
-
-<p style="text-align:center; font-size:0.875rem; color:var(--text-muted); margin-top:var(--space-6);">
-  Don't have an account?
-  <a href="{% url 'register' %}" style="color:var(--accent-blue); font-weight:600;">Create account</a>
+<p class="auth-switch">
+  Non hai un account?
+  <a href="{% url 'register' %}">Registrati ora</a>
 </p>
 
 <script>
-function togglePassword(inputId, btn) {
-  const input = document.getElementById(inputId);
-  const icon = btn.querySelector('i');
-  if (input.type === 'password') {
-    input.type = 'text';
-    icon.className = 'bi bi-eye-slash-fill';
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  const ic = btn.querySelector('i');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ic.className = 'bi bi-eye-slash-fill';
   } else {
-    input.type = 'password';
-    icon.className = 'bi bi-eye-fill';
+    inp.type = 'password';
+    ic.className = 'bi bi-eye-fill';
   }
 }
 </script>
-
-{% endblock %}
-
-{% block auth_right %}
-<!-- Decorative right panel -->
-<div class="auth-right-visual">
-  <div style="font-size:4rem; margin-bottom:var(--space-6); animation: float 3s ease-in-out infinite;">⚒</div>
-  <h3 style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--text-primary); margin-bottom:var(--space-4);">
-    Forge your legacy
-  </h3>
-  <p style="color:var(--text-muted); font-size:0.9rem; max-width:280px; margin:0 auto var(--space-8);">
-    Compete, earn points, rise through the ranks, and bring glory to your house.
-  </p>
-
-  <!-- Mini house cards -->
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); max-width:320px; margin:0 auto;">
-    <div style="background:var(--house-ignis-bg); border:1px solid rgba(239,68,68,0.2); border-radius:var(--radius-md); padding:var(--space-4); text-align:center;">
-      <div style="font-size:1.5rem;">🔥</div>
-      <div style="font-family:var(--font-display); font-weight:700; font-size:0.875rem; color:var(--house-ignis);">Ignis</div>
-    </div>
-    <div style="background:var(--house-aqua-bg); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md); padding:var(--space-4); text-align:center;">
-      <div style="font-size:1.5rem;">💧</div>
-      <div style="font-family:var(--font-display); font-weight:700; font-size:0.875rem; color:var(--house-aqua);">Aqua</div>
-    </div>
-    <div style="background:var(--house-terra-bg); border:1px solid rgba(34,197,94,0.2); border-radius:var(--radius-md); padding:var(--space-4); text-align:center;">
-      <div style="font-size:1.5rem;">🌿</div>
-      <div style="font-family:var(--font-display); font-weight:700; font-size:0.875rem; color:var(--house-terra);">Terra</div>
-    </div>
-    <div style="background:var(--house-ventus-bg); border:1px solid rgba(167,139,250,0.2); border-radius:var(--radius-md); padding:var(--space-4); text-align:center;">
-      <div style="font-size:1.5rem;">🌪</div>
-      <div style="font-family:var(--font-display); font-weight:700; font-size:0.875rem; color:var(--house-ventus);">Ventus</div>
-    </div>
-  </div>
-</div>
-
-<style>
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-</style>
 {% endblock %}

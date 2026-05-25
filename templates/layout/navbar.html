@@ -1,17 +1,11 @@
 {% load static %}
-<!-- ============================================================
-     NAVBAR — Molinari Forge
-     ============================================================ -->
 <header class="navbar-forge" id="navbarForge">
 
   <!-- LEFT -->
   <div class="navbar-left">
-    <!-- Hamburger / collapse toggle -->
     <button class="navbar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
       <i class="bi bi-list" style="font-size:1.3rem;"></i>
     </button>
-
-    <!-- Breadcrumb -->
     <nav class="navbar-breadcrumb d-none d-md-flex" aria-label="breadcrumb">
       {% block breadcrumb %}
       <span class="crumb">Home</span>
@@ -21,46 +15,26 @@
     </nav>
   </div>
 
-  <!-- SEARCH (desktop) -->
+  <!-- SEARCH -->
   <div class="navbar-search d-none d-lg-block">
-    <form method="get" action="{#}">
-      <span class="search-icon"><i class="bi bi-search"></i></span>
-      <input
-        type="search"
-        name="q"
-        placeholder="Search students, houses…"
-        autocomplete="off"
-        value="{{ request.GET.q }}"
-        aria-label="Search"
-      />
-      <kbd>⌘K</kbd>
-    </form>
+    <span class="search-icon"><i class="bi bi-search"></i></span>
+    <input type="search" placeholder="Cerca studenti, casate…" autocomplete="off" aria-label="Search" />
+    <kbd>⌘K</kbd>
   </div>
 
   <!-- RIGHT -->
   <div class="navbar-right">
 
-    <!-- XP chip (students only) -->
-    {% if user.is_authenticated and user.profile.role == 'student' %}
+    {% if user.is_authenticated and user.role == 'student' %}
     <a href="{% url 'profile' %}" class="navbar-xp-chip d-none d-md-flex">
-      <span class="xp-icon">⚡</span>
-      {{ user.profile.xp|default:0 }} XP
+      <span class="xp-icon">⚡</span> XP
     </a>
     {% endif %}
 
     <div class="navbar-divider d-none d-md-block"></div>
 
-    <!-- Notifications -->
-    <a href="{% url 'notifications' %}" class="navbar-icon-btn" aria-label="Notifications">
+    <a href="{% url 'notifications' %}" class="navbar-icon-btn" aria-label="Notifiche">
       <i class="bi bi-bell-fill"></i>
-      {% if unread_notifications_count %}
-        <span class="notif-dot"></span>
-      {% endif %}
-    </a>
-
-    <!-- Settings -->
-    <a href="{#}" class="navbar-icon-btn d-none d-md-flex" aria-label="Settings">
-      <i class="bi bi-gear-fill"></i>
     </a>
 
     <div class="navbar-divider"></div>
@@ -68,11 +42,7 @@
     <!-- Avatar dropdown -->
     <div class="dropdown">
       <button class="navbar-avatar-btn dropdown-toggle" id="navUserMenu" data-bs-toggle="dropdown" aria-expanded="false">
-        {% if user.profile.avatar %}
-          <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="avatar avatar-sm" />
-        {% else %}
-          <div class="avatar-placeholder avatar-sm">{{ user.username|first|upper }}</div>
-        {% endif %}
+        <div class="avatar-placeholder avatar-sm">{{ user.username|first|upper }}</div>
         <span class="nav-name d-none d-md-block">{{ user.get_full_name|default:user.username }}</span>
         <i class="bi bi-chevron-down d-none d-md-block" style="font-size:0.65rem; color:var(--text-muted);"></i>
       </button>
@@ -84,20 +54,18 @@
             <div class="dn-email">{{ user.email }}</div>
           </div>
         </li>
-        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person-fill"></i> My Profile</a></li>
-        <li><a class="dropdown-item" href="{#}"><i class="bi bi-gear-fill"></i> Settings</a></li>
-        {% if user.is_staff or user.profile.role == 'teacher' %}
-        <li><a class="dropdown-item" href="{% url 'admin_panel' %}"><i class="bi bi-speedometer2"></i> Admin Panel</a></li>
+        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person-fill"></i> Profilo</a></li>
+        {% if user.is_teacher %}
+        <li><a class="dropdown-item" href="{% url 'teacher_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard Docente</a></li>
         {% endif %}
         <li><hr class="dropdown-divider" /></li>
         <li>
-          <a class="dropdown-item danger" href="{#}">
-            <i class="bi bi-box-arrow-right"></i> Sign Out
+          <a class="dropdown-item danger" href="{% url 'logout' %}">
+            <i class="bi bi-box-arrow-right"></i> Esci
           </a>
         </li>
       </ul>
-    </div><!-- /dropdown -->
+    </div>
 
-  </div><!-- /navbar-right -->
-
+  </div>
 </header>
